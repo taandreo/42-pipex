@@ -6,7 +6,7 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/28 20:09:21 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/08 12:02:31 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/01/08 23:07:35 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ int	open_file(char *filename, int flag, int mode)
 	if (fd < 0)
 	{
 		perror(filename);
-		exit (1);
+		exit(1);
 	}
 	return (fd);
 }

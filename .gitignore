@@ -8,3 +8,4 @@ fdf
 *.out
 *.txt
 pipex
+pipex-tester/

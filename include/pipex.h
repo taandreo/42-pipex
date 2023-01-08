@@ -6,7 +6,7 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/28 19:49:13 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/08 12:45:26 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/01/08 21:07:20 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include "ft_printf.h"
 #include <stdio.h>
+#include <sys/wait.h>
 
 void	usage(void);
 int		open_file(char *filename, int flag, int mode);
