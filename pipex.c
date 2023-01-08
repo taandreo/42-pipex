@@ -6,7 +6,7 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/28 19:06:09 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/08 12:39:12 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/01/08 13:24:30 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,57 +27,6 @@ char	**read_args(char *arg_str)
 
 	args = ft_split(arg_str, ' ');
 	return (args);
-}
-
-char	*find_path(char *bin_name, char **paths)
-{
-	int		i;
-	char	*s1;
-	char	*full_path;
-
-	i = -1;
-	while(paths[++i])
-	{
-		s1 = ft_strjoin("/", bin_name);
-		full_path = ft_strjoin(paths[i], s1);
-		if (access(full_path, X_OK) == 0)
-		{
-			free(s1);
-			return (full_path);
-		}
-		free(full_path);
-	}
-	return (NULL);
-}
-
-char	*get_env(char **envp, char *env_var)
-{
-	int i;
-	int len;
-
-	i = -1;
-	len = ft_strlen(env_var);
-	
-	while(envp[++i])
-	{
-		if (ft_strncmp(envp[i], env_var, len) == 0)
-			return (envp[i] + len + 1);
-	}
-	return (NULL);
-}
-
-char	*get_bin_path(char *bin_file, char **paths)
-{
-	char *full_path;
-
-	full_path =  find_path(bin_file, paths);
-	ft_freemt((void **) paths);
-	if (full_path == NULL)
-	{
-		ft_dprintf(STDERR_FILENO, "Command not found: %s\n", bin_file);
-		exit(1);
-	}
-	return (full_path);
 }
 
 void	exec_cmd(t_pipex *pix, int in_fd, int out_fd, char *cmd)
@@ -116,7 +65,10 @@ int	main(int argc, char *argv[], char *envp[])
 	pix = ft_calloc(1, sizeof(t_pipex));
 	path_env = get_env(envp, "PATH");
 	if (path_env == NULL)
+	{	
 		ft_dprintf(STDERR_FILENO, "Error: not found PATH environment variable");
+		exit(EXIT_FAILURE);
+	}
 	pix->paths = ft_split(path_env, ':');
 
 	pix->fd_infile = open_file(argv[1], O_RDONLY, 0);

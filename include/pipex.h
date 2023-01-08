@@ -6,7 +6,7 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/28 19:49:13 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/08 12:03:17 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/01/08 12:45:26 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,11 @@
 #include <stdio.h>
 
 void	usage(void);
-int	open_file(char *filename, int flag, int mode);
+int		open_file(char *filename, int flag, int mode);
 void	error(char *msg);
+// path.c
+char	*find_path(char *bin_name, char **paths);
+char	*get_env(char **envp, char *env_var);
+char	*get_bin_path(char *bin_file, char **paths);
 
 #endif

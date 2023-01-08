@@ -14,7 +14,7 @@ ifeq ($(UNAME), Darwin)
 	LIBS = -lmlx -lft -framework OpenGL -framework AppKit
 endif
 
-SRCS = pipex.c utils.c
+SRCS = pipex.c utils.c path.c
 
 OBJS = $(SRCS:.c=.o)
 
