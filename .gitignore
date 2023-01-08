@@ -1,0 +1,9 @@
+lib/*
+libft/
+ignore/
+fdf
+.*
+!.gitignore
+*.o
+*.out
+*.txt
