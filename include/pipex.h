@@ -19,10 +19,14 @@
 #include "ft_printf.h"
 #include <stdio.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <errno.h>
 
+// utils.c
 void	usage(void);
 int		open_file(char *filename, int flag, int mode);
 void	error(char *msg);
+int     free_mt(void **mt);
 // path.c
 char	*find_path(char *bin_name, char **paths);
 char	*get_env(char **envp, char *env_var);

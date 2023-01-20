@@ -24,6 +24,17 @@ void	usage(void)
 	exit(EXIT_FAILURE);
 }
 
+int	free_mt(void **mt)
+{
+	int	i;
+
+	i = 0;
+	while (mt[i])
+		free(mt[i++]);
+	free(mt);
+	return (i);
+}
+
 int	open_file(char *filename, int flag, int mode)
 {
 	int	fd;
@@ -35,7 +46,7 @@ int	open_file(char *filename, int flag, int mode)
 	if (fd < 0)
 	{
 		perror(filename);
-		exit(1);
+		exit(errno);
 	}
 	return (fd);
 }

@@ -9,7 +9,7 @@ UNAME := $(shell uname)
 LIBS := -lft
 
 ifeq ($(UNAME), Darwin)
-# CFLAGS = -Wall -Wextra -Werror -arch x86_64
+#CFLAGS = -Wall -Wextra -Werror -arch x86_64
 	CFLAGS = -Werror -arch x86_64
 	LIBS = -lmlx -lft -framework OpenGL -framework AppKit
 endif
