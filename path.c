@@ -53,11 +53,11 @@ char	*get_bin_path(char *bin_file, char **paths)
 	char	*full_path;
 
 	full_path = find_path(bin_file, paths);
-	ft_freemt((void **) paths);
 	if (full_path == NULL)
 	{
-		ft_dprintf(STDERR_FILENO, "Command not found: %s\n", bin_file);
-		exit(1);
+		// ft_dprintf(STDERR_FILENO, "Command not found: %s\n", bin_file);
+		// exit(1);
+		return (ft_strdup(bin_file));
 	}
 	return (full_path);
 }

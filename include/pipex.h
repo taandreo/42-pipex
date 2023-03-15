@@ -22,11 +22,22 @@
 #include <sys/types.h>
 #include <errno.h>
 
+typedef struct s_pipex {
+	int 	fd[2];
+	int		fd_infile;
+	int 	fd_outfile;
+	int 	pid0;
+	int 	pid1;
+	char	**paths;
+	char	**envp;
+} t_pipex;
+
 // utils.c
 void	usage(void);
-int		open_file(char *filename, int flag, int mode);
+int	    open_file(t_pipex *pix, char *filename, int flag, int mode);
 void	error(char *msg);
 int     free_mt(void **mt);
+void    free_pipex(t_pipex *pix);
 // path.c
 char	*find_path(char *bin_name, char **paths);
 char	*get_env(char **envp, char *env_var);

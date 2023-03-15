@@ -12,17 +12,7 @@
 
 #include "pipex.h"
 
-typedef struct s_pipex {
-	int 	fd[2];
-	int		fd_infile;
-	int 	fd_outfile;
-	int 	pid0;
-	int 	pid1;
-	// char	**cmd_args0
-	// char	**cmd_args1
-	char	**paths;
-	char	**envp;
-} t_pipex;
+
 
 char	**read_args(char *arg_str)
 {
@@ -31,20 +21,49 @@ char	**read_args(char *arg_str)
 	return (args);
 }
 
-// void free_pipex(t_pipex *pix)
+
+
+void	close_pipe(int fd[2])
+{
+	close(fd[0]);
+	close(fd[1]);
+}
+
+// int	exec_cmd(t_pipex *pix, int in_fd, int out_fd, char *cmd)
 // {
-// 	if (pix->cmd_args0)
-// 		free_mt(pix->cmd_args0)
-// 	if (pix->cmd_args1)
-// 		free_mt(pix->cmd_args1)
-// 	if (pix->paths)
-// 		free_mt(pix->paths)
+// 	char	**cmd_args;
+// 	char	*full_path;
+// 	int		pid;
+
+// 	pid = fork();
+// 	if (pid < 0)
+// 		error("Forking process");
+// 	if (pid == 0)
+// 	{
+// 		cmd_args = read_args(cmd);
+// 		if (cmd_args == NULL)
+// 			error("Getting cmds.");
+// 		full_path = get_bin_path(cmd_args[0], pix->paths);
+// 		dup2(in_fd, STDIN_FILENO);
+// 		dup2(out_fd, STDOUT_FILENO);
+// 		close_pipe()
+// 		close(in_fd);
+// 		close(out_fd);
+// 		if (execve(full_path, cmd_args, pix->envp) == -1)
+// 		{
+// 			perror(cmd_args[0]);
+// 			free(full_path);
+// 			free_mt((void **) cmd_args);
+// 		}
+// 	}
+// 	return (pid);
 // }
 
-int	exec_cmd(t_pipex *pix, int in_fd, int out_fd, char *cmd)
+int	fork0(t_pipex *pix, char *infile, char *cmd)
 {
 	char	**cmd_args;
 	char	*full_path;
+	int		infile_fd;
 	int		pid;
 
 	pid = fork();
@@ -52,28 +71,57 @@ int	exec_cmd(t_pipex *pix, int in_fd, int out_fd, char *cmd)
 		error("Forking process");
 	if (pid == 0)
 	{
+		close(pix->fd[0]);
+		infile_fd = open_file(pix, infile, O_RDONLY, 0);
 		cmd_args = read_args(cmd);
 		if (cmd_args == NULL)
 			error("Getting cmds.");
 		full_path = get_bin_path(cmd_args[0], pix->paths);
-		dup2(in_fd, STDIN_FILENO);
-		dup2(out_fd, STDOUT_FILENO);
-		close(pix->fd[0]);
-		close(pix->fd[1]);
+		dup2(infile_fd, STDIN_FILENO);
+		dup2(pix->fd[1], STDOUT_FILENO);
+		close(infile_fd);
 		if (execve(full_path, cmd_args, pix->envp) == -1)
 		{
 			perror(cmd_args[0]);
 			free(full_path);
-			free_mt((void **) full_path);
+			free_mt((void **) cmd_args);
+			free_pipex(pix);
 		}
 	}
 	return (pid);
 }
 
-void	close_pipe(int fd[2])
+int	fork1(t_pipex *pix, char *outfile, char *cmd)
 {
-	close(fd[0]);
-	close(fd[1]);
+	char	**cmd_args;
+	char	*full_path;
+	int		outfile_fd;
+	int		pid;
+
+	pid = fork();
+	if (pid < 0)
+		error("Forking process");
+	if (pid == 0)
+	{
+		close(pix->fd[1]);
+		outfile_fd = open_file(pix, outfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+		cmd_args = read_args(cmd);
+		if (cmd_args == NULL)
+			error("Getting cmds.");
+		full_path = get_bin_path(cmd_args[0], pix->paths);
+		dup2(pix->fd[0], STDIN_FILENO);
+		dup2(outfile_fd, STDOUT_FILENO);
+		close(outfile_fd);
+		if (execve(full_path, cmd_args, pix->envp) != 1)
+		{
+			perror(cmd_args[0]);
+			free(full_path);
+			free_mt((void **) cmd_args);
+			free_pipex(pix);
+			exit(1);
+		}
+	}
+	return (pid);
 }
 
 void	init_pipex(t_pipex *pix)
@@ -94,11 +142,8 @@ int	main(int argc, char *argv[], char *envp[])
 	int		status;
 	
 	if (argc != 5)
-		usage();
-	
-	// pix = ft_calloc(1, sizeof(t_pipex));
+		usage();	
 	init_pipex(&pix);
-	
 	pix.envp = envp;
 	path_env = get_env(envp, "PATH");
 	if (path_env == NULL)
@@ -107,17 +152,15 @@ int	main(int argc, char *argv[], char *envp[])
 		exit(EXIT_FAILURE);
 	}
 	pix.paths = ft_split(path_env, ':');
-	pix.fd_infile = open_file(argv[1], O_RDONLY, 0);
-	pix.fd_outfile = open_file(argv[argc - 1], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	pipe(pix.fd);
-	exec_cmd(&pix, pix.fd_infile, pix.fd[1], argv[2]);
-	exec_cmd(&pix, pix.fd[0], pix.fd_outfile, argv[3]);
+	pix.pid0 = fork0(&pix, argv[1], argv[2]);
+	pix.pid1 = fork1(&pix, argv[4], argv[3]);
 	close_pipe(pix.fd);
 	waitpid(pix.pid0, NULL, 0);
 	waitpid(pix.pid1, &status, 0);
-	free_mt((void **) pix.paths);
+	free_pipex(&pix);
 	if (WIFEXITED(status))
-		return(status);
+		return(WEXITSTATUS(status));
 	else if (WIFSIGNALED(status))
 	{
 		ft_dprintf(1, "Child was terminated by signal: %i\n", WTERMSIG(status));

@@ -35,7 +35,13 @@ int	free_mt(void **mt)
 	return (i);
 }
 
-int	open_file(char *filename, int flag, int mode)
+void free_pipex(t_pipex *pix)
+{
+	if (pix->paths)
+		free_mt((void **) pix->paths);
+}
+
+int	open_file(t_pipex *pix, char *filename, int flag, int mode)
 {
 	int	fd;
 
@@ -45,6 +51,7 @@ int	open_file(char *filename, int flag, int mode)
 		fd = open(filename, flag);
 	if (fd < 0)
 	{
+		free_pipex(pix);
 		perror(filename);
 		exit(errno);
 	}
