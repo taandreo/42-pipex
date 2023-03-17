@@ -6,7 +6,7 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/08 12:43:18 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/08 12:54:57 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/03/17 03:03:16 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,13 @@ char	*get_bin_path(t_pipex *pix)
 {
 	char	*full_path;
 
-	if(ft_strchr(pix->cmd_args[0], '/'))
+	if (pix->cmd_args[0] == NULL)
+	{
+		ft_dprintf(STDERR_FILENO, "bash: '': command not found\n");
+		free_pipex(pix);
+		exit(CMDNOTFOUND);
+	}
+	if (ft_strchr(pix->cmd_args[0], '/'))
 	{
 		get_local_path(pix);
 		return (ft_strdup(pix->cmd_args[0]));

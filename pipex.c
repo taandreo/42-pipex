@@ -6,25 +6,11 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/28 19:06:09 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/09 00:23:05 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/03/17 03:01:55 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
-
-char	**read_args(char *arg_str)
-{
-	char	**args;
-
-	args = ft_split(arg_str, ' ');
-	return (args);
-}
-
-void	close_pipe(int fd[2])
-{
-	close(fd[0]);
-	close(fd[1]);
-}
 
 void	fork0(t_pipex *pix, char *infile, char *cmd)
 {
@@ -53,7 +39,7 @@ void	fork1(t_pipex *pix, char *outfile, char *cmd)
 
 	close(pix->fd[1]);
 	outfile_fd = open_file(pix, outfile,
-		O_WRONLY | O_CREAT | O_TRUNC, 0666);
+			O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	pix->cmd_args = read_args(cmd);
 	if (pix->cmd_args == NULL)
 		error("Getting cmds.");
@@ -69,20 +55,9 @@ void	fork1(t_pipex *pix, char *outfile, char *cmd)
 	}
 }
 
-void	init_pipex(t_pipex *pix)
-{
-	pix->fd[0] = 0;
-	pix->fd[1] = 0;
-	pix->cmd_path = NULL;
-	pix->cmd_args = NULL;
-	pix->pid0 = 0;
-	pix->pid1 = 0;
-	pix->paths = NULL;
-}
-
 void	wait_forks(t_pipex *pix)
 {
-	int status;
+	int	status;
 
 	waitpid(pix->pid0, NULL, 0);
 	waitpid(pix->pid1, &status, 0);
@@ -92,13 +67,13 @@ void	wait_forks(t_pipex *pix)
 	{
 		ft_dprintf(1, "Child was terminated by signal: %i\n", WTERMSIG(status));
 		exit(128 + WTERMSIG(status));
-	} 
+	}
 }
 
 void	make_forks(t_pipex *pix, char *argv[])
 {
 	int	pid;
-	
+
 	pid = fork();
 	if (pid < 0)
 		error("Forking process");
@@ -110,7 +85,7 @@ void	make_forks(t_pipex *pix, char *argv[])
 		error("Forking process");
 	if (pid == 0)
 		fork1(pix, argv[4], argv[3]);
-	pix->pid1 = pid; 
+	pix->pid1 = pid;
 	close_pipe(pix->fd);
 	free_pipex(pix);
 }
@@ -119,9 +94,9 @@ int	main(int argc, char *argv[], char *envp[])
 {
 	t_pipex	pix;
 	char	*path_env;
-	
+
 	if (argc != 5)
-		usage();	
+		usage();
 	init_pipex(&pix);
 	pix.envp = envp;
 	path_env = get_env(envp, "PATH");
@@ -134,6 +109,5 @@ int	main(int argc, char *argv[], char *envp[])
 	pipe(pix.fd);
 	make_forks(&pix, argv);
 	wait_forks(&pix);
-	return(0);
+	return (0);
 }
-

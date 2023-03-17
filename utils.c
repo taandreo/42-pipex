@@ -6,7 +6,7 @@
 /*   By: tairribe <tairribe@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/28 20:09:21 by tairribe          #+#    #+#             */
-/*   Updated: 2023/01/08 23:07:35 by tairribe         ###   ########.fr       */
+/*   Updated: 2023/03/17 03:03:45 by tairribe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int	free_mt(void **mt)
 	return (i);
 }
 
-void free_pipex(t_pipex *pix)
+void	free_pipex(t_pipex *pix)
 {
 	if (pix->paths)
 		free_mt((void **) pix->paths);
