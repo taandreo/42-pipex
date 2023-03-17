@@ -28,6 +28,7 @@ char	*find_path(char *bin_name, char **paths)
 			free(s1);
 			return (full_path);
 		}
+		free(s1);
 		free(full_path);
 	}
 	return (NULL);
@@ -48,16 +49,39 @@ char	*get_env(char **envp, char *env_var)
 	return (NULL);
 }
 
-char	*get_bin_path(char *bin_file, char **paths)
+void	get_local_path(t_pipex *pix)
+{
+	if (access(pix->cmd_args[0], X_OK) == 0)
+		return ;
+	if (access(pix->cmd_args[0], F_OK) == 0)
+	{
+		ft_dprintf(STDERR_FILENO, "bash: %s: ", pix->cmd_args[0]);
+		ft_dprintf(STDERR_FILENO, "Permission denied\n");
+		free_pipex(pix);
+		exit(NOTEXEC);
+	}
+	ft_dprintf(STDERR_FILENO, "bash: %s: ", pix->cmd_args[0]);
+	ft_dprintf(STDERR_FILENO, " No such file or directory\n");
+	free_pipex(pix);
+	exit(CMDNOTFOUND);
+}
+
+char	*get_bin_path(t_pipex *pix)
 {
 	char	*full_path;
 
-	full_path = find_path(bin_file, paths);
+	if(ft_strchr(pix->cmd_args[0], '/'))
+	{
+		get_local_path(pix);
+		return (ft_strdup(pix->cmd_args[0]));
+	}
+	full_path = find_path(pix->cmd_args[0], pix->paths);
 	if (full_path == NULL)
 	{
-		// ft_dprintf(STDERR_FILENO, "Command not found: %s\n", bin_file);
-		// exit(1);
-		return (ft_strdup(bin_file));
+		ft_dprintf(STDERR_FILENO, "%s: ", pix->cmd_args[0]);
+		ft_dprintf(STDERR_FILENO, "command not found\n");
+		free_pipex(pix);
+		exit(CMDNOTFOUND);
 	}
 	return (full_path);
 }

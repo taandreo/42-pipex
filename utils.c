@@ -32,6 +32,7 @@ int	free_mt(void **mt)
 	while (mt[i])
 		free(mt[i++]);
 	free(mt);
+	mt = NULL;
 	return (i);
 }
 
@@ -39,6 +40,10 @@ void free_pipex(t_pipex *pix)
 {
 	if (pix->paths)
 		free_mt((void **) pix->paths);
+	if (pix->cmd_args)
+		free_mt((void **) pix->cmd_args);
+	if (pix->cmd_path)
+		free(pix->cmd_path);
 }
 
 int	open_file(t_pipex *pix, char *filename, int flag, int mode)

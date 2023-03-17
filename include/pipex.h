@@ -22,10 +22,13 @@
 #include <sys/types.h>
 #include <errno.h>
 
+# define NOTEXEC 126
+# define CMDNOTFOUND 127
+
 typedef struct s_pipex {
 	int 	fd[2];
-	int		fd_infile;
-	int 	fd_outfile;
+	char	*cmd_path;
+	char 	**cmd_args;
 	int 	pid0;
 	int 	pid1;
 	char	**paths;
@@ -41,6 +44,6 @@ void    free_pipex(t_pipex *pix);
 // path.c
 char	*find_path(char *bin_name, char **paths);
 char	*get_env(char **envp, char *env_var);
-char	*get_bin_path(char *bin_file, char **paths);
+char	*get_bin_path(t_pipex *pix);
 
 #endif
