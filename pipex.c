@@ -15,6 +15,7 @@
 char	**read_args(char *arg_str)
 {
 	char	**args;
+
 	args = ft_split(arg_str, ' ');
 	return (args);
 }
@@ -25,64 +26,47 @@ void	close_pipe(int fd[2])
 	close(fd[1]);
 }
 
-int	fork0(t_pipex *pix, char *infile, char *cmd)
+void	fork0(t_pipex *pix, char *infile, char *cmd)
 {
 	int		infile_fd;
-	int		pid;
 
-	pid = fork();
-	if (pid < 0)
-		error("Forking process");
-	if (pid == 0)
+	close(pix->fd[0]);
+	infile_fd = open_file(pix, infile, O_RDONLY, 0);
+	pix->cmd_args = read_args(cmd);
+	if (pix->cmd_args == NULL)
+		error("Getting cmds.");
+	pix->cmd_path = get_bin_path(pix);
+	dup2(infile_fd, STDIN_FILENO);
+	dup2(pix->fd[1], STDOUT_FILENO);
+	close(infile_fd);
+	if (execve(pix->cmd_path, pix->cmd_args, pix->envp) == -1)
 	{
-		close(pix->fd[0]);
-		infile_fd = open_file(pix, infile, O_RDONLY, 0);
-		pix->cmd_args = read_args(cmd);
-		if (pix->cmd_args == NULL)
-			error("Getting cmds.");
-		pix->cmd_path = get_bin_path(pix);
-		dup2(infile_fd, STDIN_FILENO);
-		dup2(pix->fd[1], STDOUT_FILENO);
-		close(infile_fd);
-		if (execve(pix->cmd_path, pix->cmd_args, pix->envp) == -1)
-		{
-			perror(pix->cmd_args[0]);
-			// free(full_path);
-			// free_mt((void **) cmd_args);
-			free_pipex(pix);
-			exit(1);
-		}
+		perror(pix->cmd_args[0]);
+		free_pipex(pix);
+		exit(1);
 	}
-	return (pid);
 }
 
-int	fork1(t_pipex *pix, char *outfile, char *cmd)
+void	fork1(t_pipex *pix, char *outfile, char *cmd)
 {
 	int		outfile_fd;
-	int		pid;
 
-	pid = fork();
-	if (pid < 0)
-		error("Forking process");
-	if (pid == 0)
+	close(pix->fd[1]);
+	outfile_fd = open_file(pix, outfile,
+		O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	pix->cmd_args = read_args(cmd);
+	if (pix->cmd_args == NULL)
+		error("Getting cmds.");
+	pix->cmd_path = get_bin_path(pix);
+	dup2(pix->fd[0], STDIN_FILENO);
+	dup2(outfile_fd, STDOUT_FILENO);
+	close(outfile_fd);
+	if (execve(pix->cmd_path, pix->cmd_args, pix->envp) != 1)
 	{
-		close(pix->fd[1]);
-		outfile_fd = open_file(pix, outfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-		pix->cmd_args = read_args(cmd);
-		if (pix->cmd_args == NULL)
-			error("Getting cmds.");
-		pix->cmd_path = get_bin_path(pix);
-		dup2(pix->fd[0], STDIN_FILENO);
-		dup2(outfile_fd, STDOUT_FILENO);
-		close(outfile_fd);
-		if (execve(pix->cmd_path, pix->cmd_args, pix->envp) != 1)
-		{
-			perror(pix->cmd_args[0]);
-			free_pipex(pix);
-			exit(1);
-		}
+		perror(pix->cmd_args[0]);
+		free_pipex(pix);
+		exit(1);
 	}
-	return (pid);
 }
 
 void	init_pipex(t_pipex *pix)
@@ -98,7 +82,7 @@ void	init_pipex(t_pipex *pix)
 
 void	wait_forks(t_pipex *pix)
 {
-	int		status;
+	int status;
 
 	waitpid(pix->pid0, NULL, 0);
 	waitpid(pix->pid1, &status, 0);
@@ -109,6 +93,26 @@ void	wait_forks(t_pipex *pix)
 		ft_dprintf(1, "Child was terminated by signal: %i\n", WTERMSIG(status));
 		exit(128 + WTERMSIG(status));
 	} 
+}
+
+void	make_forks(t_pipex *pix, char *argv[])
+{
+	int	pid;
+	
+	pid = fork();
+	if (pid < 0)
+		error("Forking process");
+	if (pid == 0)
+		fork0(pix, argv[1], argv[2]);
+	pix->pid0 = pid;
+	pid = fork();
+	if (pid < 0)
+		error("Forking process");
+	if (pid == 0)
+		fork1(pix, argv[4], argv[3]);
+	pix->pid1 = pid; 
+	close_pipe(pix->fd);
+	free_pipex(pix);
 }
 
 int	main(int argc, char *argv[], char *envp[])
@@ -128,10 +132,7 @@ int	main(int argc, char *argv[], char *envp[])
 	}
 	pix.paths = ft_split(path_env, ':');
 	pipe(pix.fd);
-	pix.pid0 = fork0(&pix, argv[1], argv[2]);
-	pix.pid1 = fork1(&pix, argv[4], argv[3]);
-	close_pipe(pix.fd);
-	free_pipex(&pix);
+	make_forks(&pix, argv);
 	wait_forks(&pix);
 	return(0);
 }
